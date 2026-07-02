@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Синематека</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --bg: #16140f;
+  --surface: #211e17;
+  --surface-2: #2a2620;
+  --border: #3a352a;
+  --red: #b23a2e;
+  --red-soft: rgba(178,58,46,0.18);
+  --gold: #c9a227;
+  --gold-soft: rgba(201,162,39,0.16);
+  --ink: #ede6d6;
+  --muted: #9a927d;
+  --muted-2: #6f6858;
+  --green: #6f8f5c;
+  --blue: #5b84a3;
+  --blue-soft: rgba(91,132,163,0.18);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;}
+body{-webkit-font-smoothing:antialiased;}
+::selection{background:var(--gold-soft);}
+
+.wrap{max-width:920px;margin:0 auto;padding:28px 18px 80px;}
+
+/* Header */
+header.top{position:relative;padding:22px 22px 26px;margin-bottom:22px;border:1px solid var(--border);border-radius:4px;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 22px, var(--surface) 22px 44px),
+    var(--surface);
+  overflow:hidden;
+}
+header.top::before, header.top::after{
+  content:"";position:absolute;top:0;bottom:0;width:22px;
+  background-image: radial-gradient(circle, var(--bg) 5px, transparent 5.5px);
+  background-size: 22px 22px; background-position: center;
+}
+header.top::before{left:0;border-right:1px dashed var(--border);}
+header.top::after{right:0;border-left:1px dashed var(--border);}
+.title-row{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;padding:0 30px;}
+h1{font-family:'Bebas Neue',sans-serif;font-size:44px;letter-spacing:2px;margin:0;color:var(--ink);}
+.subtitle{font-size:13px;color:var(--muted);font-family:'IBM Plex Mono',monospace;}
+.stats{display:flex;gap:22px;padding:14px 30px 0;flex-wrap:wrap;}
+.stat{font-family:'IBM Plex Mono',monospace;}
+.stat b{font-size:20px;color:var(--gold);display:block;font-weight:600;}
+.stat span{font-size:11px;color:var(--muted-2);text-transform:uppercase;letter-spacing:.06em;}
+
+/* Controls */
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center;}
+input[type=text]{
+  background:var(--surface);border:1px solid var(--border);color:var(--ink);
+  padding:9px 12px;border-radius:3px;font-family:'Inter';font-size:14px;flex:1;min-width:160px;
+}
+input[type=text]:focus{outline:none;border-color:var(--gold);}
+#sortSelect{
+  background:var(--surface);border:1px solid var(--border);color:var(--muted);
+  padding:9px 10px;border-radius:3px;font-family:'Inter';font-size:13px;cursor:pointer;
+}
+#sortSelect:focus{outline:none;border-color:var(--gold);}
+#genreFilter{
+  background:var(--surface);border:1px solid var(--border);color:var(--muted);
+  padding:8px 10px;border-radius:3px;font-family:'Inter';font-size:13px;cursor:pointer;
+}
+#genreFilter:focus{outline:none;border-color:var(--gold);}
+.badge-genre{font-size:10px;color:var(--muted);font-family:'IBM Plex Mono',monospace;border:1px solid var(--border);padding:2px 6px;border-radius:3px;}
+#bulkBlock{margin-top:2px;}
+.chip{
+  background:var(--surface);border:1px solid var(--border);color:var(--muted);
+  padding:8px 13px;border-radius:20px;font-size:13px;cursor:pointer;user-select:none;
+  transition:.15s;white-space:nowrap;
+}
+.chip:hover{border-color:var(--muted);}
+.chip.active{background:var(--red-soft);border-color:var(--red);color:var(--ink);}
+.chip.active.status-want{background:var(--gold-soft);border-color:var(--gold);}
+.chip.active.status-watching{background:var(--blue-soft);border-color:var(--blue);}
+.spacer{flex:1;}
+.btn-add{
+  background:var(--red);color:#fff;border:none;padding:10px 18px;border-radius:3px;
+  font-family:'Inter';font-weight:600;font-size:14px;cursor:pointer;
+}
+.btn-add:hover{background:#c44536;}
+
+/* List */
+.list{display:flex;flex-direction:column;gap:6px;}
+.row{
+  display:flex;align-items:center;gap:12px;background:var(--surface);
+  border:1px solid var(--border);border-left:3px solid var(--muted-2);
+  border-radius:3px;padding:11px 14px;
+}
+.row.status-watched{border-left-color:var(--green);}
+.row.status-want{border-left-color:var(--gold);}
+.row.status-watching{border-left-color:var(--blue);}
+.row-main{flex:1;min-width:0;}
+.row-title{font-size:14.5px;font-weight:500;color:var(--ink);}
+.row-title .yr{color:var(--muted-2);font-family:'IBM Plex Mono',monospace;font-size:12.5px;margin-left:6px;}
+.note-toggle{background:none;border:none;color:var(--muted-2);cursor:pointer;font-size:11px;margin-left:7px;padding:2px 5px;border-radius:3px;transition:transform .15s ease;display:inline-block;vertical-align:middle;}
+.note-toggle:hover{color:var(--ink);background:var(--surface-2);}
+.note-toggle.open{transform:rotate(180deg);}
+.row-note{display:none;font-size:12.5px;color:var(--muted);margin-top:5px;line-height:1.45;max-width:640px;white-space:pre-wrap;}
+.row-note.expanded{display:block;}
+.row-tag{display:inline-block;font-size:10.5px;color:var(--muted-2);border:1px solid var(--border);border-radius:10px;padding:1px 8px;margin-top:5px;font-family:'IBM Plex Mono',monospace;}
+.badges{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.badge-cat{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-family:'IBM Plex Mono',monospace;border:1px solid var(--border);padding:2px 6px;border-radius:3px;}
+.badge-rating{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:13px;color:var(--gold);min-width:26px;text-align:right;}
+.badge-status{font-size:10px;text-transform:uppercase;letter-spacing:.04em;font-family:'IBM Plex Mono',monospace;font-weight:600;padding:3px 9px;border-radius:10px;white-space:nowrap;}
+.badge-status.st-watched{background:rgba(111,143,92,0.22);color:#9fc086;border:1px solid rgba(111,143,92,0.5);}
+.badge-status.st-watching{background:var(--blue-soft);color:#8fb4d1;border:1px solid rgba(91,132,163,0.5);}
+.badge-status.st-want{background:var(--gold-soft);color:var(--gold);border:1px solid rgba(201,162,39,0.5);}
+.poster{width:38px;height:54px;flex-shrink:0;border-radius:3px;overflow:hidden;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;}
+.poster img{width:100%;height:100%;object-fit:cover;display:block;}
+.poster .ph{font-family:'Bebas Neue';font-size:16px;color:var(--muted-2);}
+.row-actions{display:flex;gap:4px;flex-shrink:0;}
+.icon-btn{
+  background:none;border:none;color:var(--muted-2);cursor:pointer;font-size:15px;padding:5px;border-radius:3px;line-height:1;
+}
+.icon-btn:hover{background:var(--surface-2);color:var(--ink);}
+.empty{padding:40px 20px;text-align:center;color:var(--muted-2);font-family:'IBM Plex Mono',monospace;font-size:13px;}
+
+/* Modal */
+.overlay{position:fixed;inset:0;background:rgba(10,9,6,0.72);display:none;align-items:center;justify-content:center;z-index:50;padding:16px;}
+.overlay.show{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:22px;width:100%;max-width:440px;max-height:calc(100vh - 32px);overflow-y:auto;}
+.modal h2{font-family:'Bebas Neue';font-size:24px;letter-spacing:1px;margin:0 0 16px;}
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;font-family:'IBM Plex Mono',monospace;}
+.field input, .field select, .field textarea{
+  width:100%;background:var(--bg);border:1px solid var(--border);color:var(--ink);
+  padding:9px 10px;border-radius:3px;font-family:'Inter';font-size:14px;
+}
+.field textarea{resize:vertical;min-height:60px;font-family:'Inter';}
+.row2{display:flex;gap:10px;}
+.row2 .field{flex:1;}
+.modal-actions{display:flex;justify-content:space-between;align-items:center;margin-top:18px;gap:8px;}
+.btn-primary{background:var(--red);color:#fff;border:none;padding:9px 16px;border-radius:3px;font-weight:600;cursor:pointer;font-family:'Inter';}
+.btn-ghost{background:none;border:1px solid var(--border);color:var(--muted);padding:9px 14px;border-radius:3px;cursor:pointer;font-family:'Inter';}
+.btn-fetch{background:var(--gold-soft);border:1px solid var(--gold);color:var(--gold);padding:9px 12px;border-radius:3px;cursor:pointer;font-size:12.5px;font-family:'IBM Plex Mono',monospace;}
+.btn-fetch:disabled{opacity:.5;cursor:default;}
+.fetch-status{font-size:11.5px;color:var(--muted-2);margin-top:6px;font-family:'IBM Plex Mono',monospace;min-height:14px;}
+.hint{font-size:11px;color:var(--muted-2);margin-top:14px;line-height:1.5;}
+.dup-warning{display:none;background:rgba(178,58,46,0.14);border:1px solid var(--red);color:var(--ink);
+  border-radius:3px;padding:9px 11px;font-size:12.5px;margin:-4px 0 12px;line-height:1.5;}
+.link-btn{background:none;border:none;color:var(--gold);text-decoration:underline;cursor:pointer;font-size:12.5px;font-family:'Inter';padding:0;}
+.star-btn{color:var(--muted-2);font-size:16px;}
+.star-btn.active-star{color:var(--gold);}
+.badge-fav{color:var(--gold);font-size:14px;flex-shrink:0;}
+.chip.fav-chip.active{background:var(--gold-soft);border-color:var(--gold);color:var(--gold);}
+.filter-block{margin-bottom:10px;}
+.filter-label{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted-2);margin-bottom:6px;padding-left:2px;}
+
+@media (max-width:520px){
+  h1{font-size:34px;}
+  .stats{gap:14px;}
+  header.top::before,header.top::after{display:none;}
+  .title-row,.stats{padding:0 8px;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="title-row">
+      <h1>СИНЕМАТЕКА</h1>
+      <span class="subtitle">личный каталог просмотренного</span>
+      <span class="subtitle" id="syncBadge" style="margin-left:auto;"></span>
+    </div>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <div class="controls">
+    <input type="text" id="search" placeholder="Поиск по названию, режиссёру, теме...">
+    <select id="sortSelect">
+      <option value="title-asc">А → Я</option>
+      <option value="title-desc">Я → А</option>
+      <option value="rating-desc">Оценка: сначала высокие</option>
+      <option value="rating-asc">Оценка: сначала низкие</option>
+      <option value="year-desc">Год: сначала новые</option>
+      <option value="year-asc">Год: сначала старые</option>
+    </select>
+    <button class="btn-add" id="addBtn">+ Добавить</button>
+  </div>
+  <div class="filter-block">
+    <div class="filter-label">Категория</div>
+    <div class="controls" id="filterCatRow"></div>
+  </div>
+  <div class="filter-block">
+    <div class="filter-label">Статус</div>
+    <div class="controls" id="filterStatusRow"></div>
+  </div>
+  <div class="filter-block">
+    <div class="controls" id="filterFavRow"></div>
+    <select id="genreFilter" style="margin-top:8px;">
+      <option value="all">Все жанры</option>
+    </select>
+  </div>
+
+  <div class="filter-block" id="bulkBlock">
+    <button class="btn-ghost" id="bulkEnrichBtn" style="width:100%;">⌕ Подгрузить обложки, жанры и описания из Википедии для всех записей</button>
+    <div class="fetch-status" id="bulkStatus"></div>
+  </div>
+
+  <div class="list" id="list"></div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2 id="modalTitle">Новая запись</h2>
+    <div class="field">
+      <label>Название</label>
+      <input type="text" id="f_title" placeholder="Название фильма/сериала">
+    </div>
+    <div class="dup-warning" id="dupWarning"></div>
+    <div class="row2">
+      <div class="field">
+        <label>Год</label>
+        <input type="text" id="f_year" placeholder="2024">
+      </div>
+      <div class="field">
+        <label>Категория</label>
+        <select id="f_category">
+          <option value="movie">Фильм</option>
+          <option value="series">Сериал</option>
+          <option value="cartoon">Мультфильм</option>
+          <option value="anime">Аниме</option>
+        </select>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Статус</label>
+        <select id="f_status">
+          <option value="watched">Посмотрено</option>
+          <option value="watching">Смотрю сейчас</option>
+          <option value="want">Хочу посмотреть</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Оценка (0–10)</label>
+        <input type="text" id="f_rating" placeholder="8.5">
+      </div>
+    </div>
+    <div class="field">
+      <label style="display:inline;">Избранное</label>
+      <div>
+        <button type="button" class="star-btn" id="f_favorite" style="background:none;border:none;cursor:pointer;font-size:20px;padding:4px 0;">☆</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Заметка / впечатление</label>
+      <textarea id="f_note" placeholder="Твои мысли о фильме..."></textarea>
+    </div>
+    <div class="field">
+      <label>Тег (режиссёр, франшиза, тема)</label>
+      <input type="text" id="f_tag" placeholder="необязательно">
+    </div>
+    <div class="field">
+      <label>Жанр</label>
+      <input type="text" id="f_genre" placeholder="подтянется из Википедии или впиши сам">
+    </div>
+
+    <div class="field" id="posterField" style="display:none;">
+      <label>Обложка</label>
+      <div class="poster" id="posterPreview" style="width:64px;height:90px;"></div>
+    </div>
+
+    <button class="btn-fetch" id="fetchBtn" style="width:100%;margin-top:4px;">⌕ Найти в Википедии: обложка, год, жанр, описание</button>
+    <div class="fetch-status" id="fetchStatus"></div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" id="deleteBtn" style="display:none;color:var(--red);border-color:var(--red);">Удалить</button>
+      <div class="spacer"></div>
+      <button class="btn-ghost" id="cancelBtn">Отмена</button>
+      <button class="btn-primary" id="saveBtn">Сохранить</button>
+    </div>
+    <div class="hint">Поиск идёт по Википедии: подставляет обложку, год и короткое описание — при желании отредактируй перед сохранением. Если статья не находится, попробуй уточнить название или год.</div>
+  </div>
+</div>
+
+<script>
+const SEED = [{"title": "Целиком и полностью(2022)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Реквием по мечте (2000)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Телохранитель (1992)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Черная пантера 2(2022)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Жесткая ночь (2022)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Солнце моё(2022)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Достать ножи 2 (2022)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Хулиган зеленых улиц (2005)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Жизнь прекрасна (1997)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Брачная история (2019)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Дюна (1984)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Легенда о пианисте (1998)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Сделано в Британии (1982) – Тим Рот", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "На игле (1996)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Армагеддон (1998)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "8 миля (2002)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Матрица  (1999)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Матрица 2 (2003)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Матрица 3 (2003)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Матрица 4 – Воскрешение (2021)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Бойцовский клуб (1999)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Достучаться до небес (1997)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Пролетая над гнездом кукушки (1975)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Валли (2008)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Роки – 5 частей + 3 части (1976–2019)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Полицейская академия – 7 частей (1984–1994)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Джон Уик – 4 части (2014–2023)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Выпускник (1967)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Улица разбиты фонарей – русское кино отдельно", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Бригада – русской кино отдельно", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Мистер бин (1990)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Мистер Бин на отдыхе (2007)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Гаттака (1997)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "12 обезьян (1995)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Псих – русский сериал (отдельно)", "category": "series", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Неоновый демон (2016)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Эквилибриум (2002)- Кристиан Бейл – ахуенные драки просто пушка бомба", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Она (2013) - Хоакин Феникс", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Лобстер (2015) – Колин Фаррелл", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Одиссея (2016)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Нелюбовь (2017) – Россия", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Блондинка (2022) – Ана де Армас", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Район номер 9 (2009)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Обитель зла (2002–2017)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Малыш на драйве (2017) – Энсел Эльгорт", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Фрида (2002) – Сальма Хайек", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Фарго (фильм 1996, и сериал 2014)", "category": "series", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "4 льва (2010)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Реальная любовь (2003)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "200 сигарет (1999) – Бен и Кейси Аффлек", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Ночи в стиле буги (1997) – Пол Томас Андерсон – начала", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Один дома (1990, 1992) – Маколей Калкин – 2 части", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Легенда от зеленом рыцаре (2021) – Дев Патель", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Городок – русское отдельно", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Эйс Вентура (комедия супер)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Эйс вентура 2: Когда зовёт природа (1995)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Кабельщик (1996)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Лжец,Лжец (1997)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Человек на луне (1999)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Вечное сияние чистого разум(2004)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Роковое число 23 (2007)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Я люблю тебя Филипп Морис (2009)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Всегда говори Да (2013)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Умираю со смеху (2018) сериал – продюссер джим керри", "category": "series", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Особенности национальной охоты – русское отдельно", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Вавилон (2022)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Изгои  (1983) Том Круз", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Все верные ход (1983)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Рискованный бизнес (1983)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Лучший стрелок, топ ган (1986)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Человек дождя (1988)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Несколько хороших парней (1992)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "С широко закрытыми глазами (1999) Кубрик", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Ванильное небо (2001)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Москва на Гудзоне (1988) Робин Уильямс", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Доброе утро вьетнам", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Джуманджи", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Миссис Даутфайр", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Пробуждение", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Невыносимая легкость бытия – Дэниель д. Льюис", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Последний из могикан – 1992", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Во имя отца", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Эпоха невинности", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Банды нью йорка", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Баллада о Джеке и Роуз", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Нефть", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Девять", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Линкольн", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Призрачная нить (2017)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Счастливы вместе (1986)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Тельма и Луиза", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Там где течет река", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Настоящая любовь 1993", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Легенды осени", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Боксер - льюис", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "12 обезьян", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Война миров Z", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Ярость", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Древо жизни", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Как трусливый роберт форд  убил джесси джеймса", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "После прочтения сжечь", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Спящие", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "7 лет в Тибете", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Моя левая нога", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Бешеный бык – роберт де ниро", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Машинист", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Выживший", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "V значит вендетта (2006)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Основной инстинкт(1992)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Драйв(2011)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Место под соснами (2012)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Игра на понижение – пересмотреть! – 2015", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Леон – досмотреть (1994)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Дневник баскетболиста (1995)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Троя (2004)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Черная комедия – 5 сезон 20 серия (так где остановилась)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Назад в будущее 1 (1985) – Майкл Джей Фокс, Кристофер Ллойд", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Назад в будущее 2 (1989)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Назад в будущее 3 (1990)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Залечь на дно в Брюгге – Колин Фаррелл, Брендан Глисон", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Исход цари и боги (2014)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Умница Уилл Хантинг (1997) – Мэтт Дэймон", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Властелин колец – все части (2001–2004)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Анимация – 9 (2009)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Любовь смерть и роботы (с 2019)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Черное зеркало (с 2011)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Парфюмер – прочитать книгу, посмотреть фильм (2006)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Старикам тут не место (2007)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Поезд на Юму (2007)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "«Золотой глаз» (1995)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "«Завтра не умрет никогда» (1997)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "«И целого мира мало» (1999)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Умри, но не сейчас (2002)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Богемская рапсодия (2018)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Морбиус (2022)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Фокус (2015)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Горбатая гора (2005) – припизднутый фильм,  но я еще его не досмотрела – Джейк Джилленхол", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Менталист (2008–2015) – сериал", "category": "series", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Вечное сияние чистого разума (2004)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Афера по-американски (2013)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Исходный код (2011)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Миссия невыполнима все части (1996 -2023)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Крепкий орешек все части – 5 частей (1988–2013)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Форсаж все части (с 2001 пока 9 частей)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Миллионер из трущоб - 2008", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Жизнь Пи  (2012)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Область тьмы (2011)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Отель «Мэриголд» (2011)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Месть от кутюр (2015)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Светская жизнь (2016)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Пряности и страсти (2014)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Бруклин (2015)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Ла-Ла Ленд (2016)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Спасти мистера Бэнкса (2013)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Виктория и Абдул (2017)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Дождливый день в Нью-Йорке (2019)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "7 дней и ночей с Мэрилин (2011)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Воды слонам", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Смотрите как они бегут(2022)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Скот пилигрим", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Время убивать (Сандра Булок", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "табу – сериал – том харди", "category": "series", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "сериал – лето – про цоя", "category": "series", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "королевская битва", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Бэтмэн 3 части ( Кристиан Бэйл)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Бэтмен ( Роберт Паттинсон)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Безумный макс (Том Харди)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Кобра", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Семь самураев", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Счастливое число слевина", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "7 психопатов", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Звезда родилась", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Из машины", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Однажды в Ирландии", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Особое мнение", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Паразиты", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Умница Уилл Хантинг", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Дитя человеческое", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Самозванец", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Боец", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "1+1", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Агент 007 – Казино Рояль", "category": "movie", "status": "watched", "rating": 6.5, "note": "Непонятна любовная линия в первой части, слишком быстрая и нелогичная для заявленного персонажа. Но если не думать об этом — смотрибельно. Есть желание посмотреть остальные части.", "tag": ""}, {"title": "Агент 007 – Квант милосердия", "category": "movie", "status": "watched", "rating": 7, "note": "Уже понятнее: поступки и мотивация ясны, вернули персонажа таким, каким его описали в начале. У Бонда явные проблемы с выбором женщин.", "tag": ""}, {"title": "Агент 007 – Скайфолл", "category": "movie", "status": "watched", "rating": 8, "note": "Красивый фильм с высоким бюджетом, затрагивает прошлое Бонда, но слабо. Обычный шпионский боевик с добавленной драмой и злодеем в духе комиксов.", "tag": ""}, {"title": "Агент 007 – Спектр", "category": "movie", "status": "watched", "rating": 7, "note": "", "tag": ""}, {"title": "Агент 007 – Не время умирать", "category": "movie", "status": "watched", "rating": 9, "note": "Понравилась концовка — красиво и эмоционально. Финал истории, хоть и предсказуемый.", "tag": ""}, {"title": "Аватар: Путь воды", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Тар", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Топ Ган: Мэверик", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Фабельманы»", "category": "movie", "status": "watched", "rating": null, "note": "рыдала конечно чото многовато…", "tag": ""}, {"title": "Элвис", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "На Западном фронте без перемен", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Всё везде и сразу", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Банши Инишерина", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Говорят женщины", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Треугольник печали", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Криминальное чтиво", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Квентин Тарантино"}, {"title": "Джанго освобожденный", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Квентин Тарантино"}, {"title": "Четыре комнаты", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Квентин Тарантино"}, {"title": "Бешеные псы", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Квентин Тарантино"}, {"title": "Бесславные ублюдки", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Квентин Тарантино"}, {"title": "Однажды в Голливуде", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Квентин Тарантино"}, {"title": "Омерзительная восьмёрка", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Квентин Тарантино"}, {"title": "Город Грехов", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Квентин Тарантино"}, {"title": "Убить Билла", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Квентин Тарантино"}, {"title": "От заката до рассвета", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Квентин Тарантино"}, {"title": "Доказательство смерти", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Квентин Тарантино"}, {"title": "Джеки Браун", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Квентин Тарантино"}, {"title": "На взводе Битва на убер", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Квентин Тарантино"}, {"title": "Список Шиндлера", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Спилберг"}, {"title": "Спасти Рядового Райана", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Спилберг"}, {"title": "Поймай меня если сможешь", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Спилберг"}, {"title": "Челюсти", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Спилберг"}, {"title": "Парк Юрского периода", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Спилберг"}, {"title": "инопланетянин", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Спилберг"}, {"title": "Индиана Джонс", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Спилберг"}, {"title": "Фабельманы", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Спилберг"}, {"title": "Вестсайдская история", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Спилберг"}, {"title": "Первому игроку приготовиться", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Спилберг"}, {"title": "Секретное досье", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Спилберг"}, {"title": "большой и добрый великан", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Спилберг"}, {"title": "Шпионский мост", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Спилберг"}, {"title": "Линкольн", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Спилберг"}, {"title": "Боевой конь", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Спилберг"}, {"title": "Приключение Тинтина", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Спилберг"}, {"title": "Бесконечный звонок", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Спилберг"}, {"title": "мюнхен", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Спилберг"}, {"title": "Война миров", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Спилберг"}, {"title": "Терминал", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Спилберг"}, {"title": "Особое мнение", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Спилберг"}, {"title": "искусственный разум", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Спилберг"}, {"title": "неоконченное путешествие", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Спилберг"}, {"title": "Амистад", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Спилберг"}, {"title": "Помни", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Кристофер Нолан"}, {"title": "Начало", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Кристофер Нолан"}, {"title": "Престиж", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Кристофер Нолан"}, {"title": "Интерстеллар", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Кристофер Нолан"}, {"title": "Бэтмэн", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Кристофер Нолан"}, {"title": "Опенгеймер", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Кристофер Нолан"}, {"title": "Довод", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Кристофер Нолан"}, {"title": "Мементо", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Кристофер Нолан"}, {"title": "Дюнкерк", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Кристофер Нолан"}, {"title": "Остров проклятых", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Мартин Скорсезе"}, {"title": "Волк с Уолл-Стрит", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Мартин Скорсезе"}, {"title": "Банда Нью-Йорка", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Мартин Скорсезе"}, {"title": "Таксист", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Мартин Скорсезе"}, {"title": "Отступники", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Мартин Скорсезе"}, {"title": "авиатор", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Мартин Скорсезе"}, {"title": "Казио", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Мартин Скорсезе"}, {"title": "Славные Парни", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Мартин Скорсезе"}, {"title": "Терминатор", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Джеймс Кэмерон"}, {"title": "Аватар", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Джеймс Кэмерон"}, {"title": "Титаник", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Джеймс Кэмерон"}, {"title": "Чужие", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Джеймс Кэмерон"}, {"title": "Бездна", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Джеймс Кэмерон"}, {"title": "Алита Боевой Ангел", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Джеймс Кэмерон"}, {"title": "Правдивая ложь", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Джеймс Кэмерон"}, {"title": "переломный момент", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Джеймс Кэмерон"}, {"title": "сказочный мир", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Джеймс Кэмерон"}, {"title": "Рок-н-рольшик", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Гай Ричи"}, {"title": "Карта деньги два ствола", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Гай Ричи"}, {"title": "Большой куш", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Гай Ричи"}, {"title": "Шерлок Холмс", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Гай Ричи"}, {"title": "Джентельмены", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Гай Ричи"}, {"title": "гнев человеческий", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Гай Ричи"}, {"title": "Алладин", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Гай Ричи"}, {"title": "револьвер", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Гай Ричи"}, {"title": "операция фортуна", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Гай Ричи"}, {"title": "агент АНКЛ", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Гай Ричи"}, {"title": "Меч короля Артура", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Гай Ричи"}, {"title": "Семь плен(очень неприятный фильм о самом мерзком что существует)", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дэвид Финчер"}, {"title": "Игра", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дэвид Финчер"}, {"title": "Бойцовский клуб", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дэвид Финчер"}, {"title": "Загадочная история Бенджамина Баттона", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дэвид Финчер"}, {"title": "Социальная Сеть", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дэвид Финчер"}, {"title": "Девушка с татуировкой дракона", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дэвид Финчер"}, {"title": "Исчезнувшая", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дэвид Финчер"}, {"title": "Девушка которая застряла в паутине", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дэвид Финчер"}, {"title": "зодиак", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дэвид Финчер"}, {"title": "Алиса в стране чудес", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Тим Бёртон"}, {"title": "Сонная Лощина", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Тим Бёртон"}, {"title": "Эдвард руки  ножницы", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Тим Бёртон"}, {"title": "Крупная рыба", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Тим Бёртон"}, {"title": "Большие глаза", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Тим Бёртон"}, {"title": "Дом странных детей мисс Перегрин", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Тим Бёртон"}, {"title": "Дамбо", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Тим Бёртон"}, {"title": "Президент Линкольн", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Тим Бёртон"}, {"title": "Планета обезьян", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Тим Бёртон"}, {"title": "Чарли и Шоколадная фабрика", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Тим Бёртон"}, {"title": "Суини Тодд", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Тим Бёртон"}, {"title": "Мрачные тени", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Тим Бёртон"}, {"title": "Спартак", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стэнли Кубрик"}, {"title": "2001 Космическая одиссея", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стэнли Кубрик"}, {"title": "Доктор Стрейнджлав", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стэнли Кубрик"}, {"title": "Искусственный разум", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стэнли Кубрик"}, {"title": "Сияние", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стэнли Кубрик"}, {"title": "Заводной апельсин", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стэнли Кубрик"}, {"title": "С широко закрытыми глазами", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стэнли Кубрик"}, {"title": "Цельнометалличсекая оболочка", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стэнли Кубрик"}, {"title": "одноглазые валет", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стэнли Кубрик"}, {"title": "Барри Линдон", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стэнли Кубрик"}, {"title": "Тропыы славы", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стэнли Кубрик"}, {"title": "темная сторона луны", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стэнли Кубрик"}, {"title": "лолита", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стэнли Кубрик"}, {"title": "Пятый элемент", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Люк Бессон"}, {"title": "Заложница", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Люк Бессон"}, {"title": "Ангел – А", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Люк Бессон"}, {"title": "22 пули", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Люк Бессон"}, {"title": "такси", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Люк Бессон"}, {"title": "Васаби", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Люк Бессон"}, {"title": "из Парижа с любовью", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Люк Бессон"}, {"title": "Малавита", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Люк Бессон"}, {"title": "Леон", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Люк Бессон"}, {"title": "Андрей Рублёв", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Андрей Тарковский"}, {"title": "Сталкер", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Андрей Тарковский"}, {"title": "Солярис", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Андрей Тарковский"}, {"title": "Зеркало", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Андрей Тарковский"}, {"title": "Иваново детство", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Андрей Тарковский"}, {"title": "Ностальгия", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Андрей Тарковский"}, {"title": "Жертвоприношение", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Андрей Тарковский"}, {"title": "Сегодня увольнения не будет", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Андрей Тарковский"}, {"title": "Берегись змея", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Андрей Тарковский"}, {"title": "Убийцы", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Андрей Тарковский"}, {"title": "Унесеннные призраками", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Хаяо Миядзаки"}, {"title": "Ходячий замок", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Хаяо Миядзаки"}, {"title": "небесный замок Лапута", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Хаяо Миядзаки"}, {"title": "Мой сосед тороро", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Хаяо Миядзаки"}, {"title": "шепот сердца", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Хаяо Миядзаки"}, {"title": "Навсикая из долины ветров", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Хаяо Миядзаки"}, {"title": "Пренцесса мононоке", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Хаяо Миядзаки"}, {"title": "Ведьмина служба доставки", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Хаяо Миядзаки"}, {"title": "рыбка понье", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Хаяо Миядзаки"}, {"title": "ариэтти из страны лилипутов", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Хаяо Миядзаки"}, {"title": "ветер крепчает", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Хаяо Миядзаки"}, {"title": "порко россо", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Хаяо Миядзаки"}, {"title": "Властелин Колец", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Питер Джексон"}, {"title": "Назад в будущее", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Роберт Земекис"}, {"title": "Кролик Роджер", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Роберт Земекис"}, {"title": "Изгой", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Роберт Земекис"}, {"title": "Форрест Гамп", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Роберт Земекис"}, {"title": "Семейный заговор", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Альфред Хичкок"}, {"title": "Безумие", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Альфред Хичкок"}, {"title": "Топаз", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Альфред Хичкок"}, {"title": "Разорванный занавес", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Альфред Хичкок"}, {"title": "Марни", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Альфред Хичкок"}, {"title": "Птицы", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Альфред Хичкок"}, {"title": "Психо", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Альфред Хичкок"}, {"title": "На север через Северо-Запад", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Альфред Хичкок"}, {"title": "Головокружение", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Альфред Хичкок"}, {"title": "Не тот человек", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Альфред Хичкок"}, {"title": "Неприятности с Гарри", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Альфред Хичкок"}, {"title": "Поймать вора", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Альфред Хичкок"}, {"title": "Человек который слишком много знал", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Альфред Хичкок"}, {"title": "Окно во двор", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Альфред Хичкок"}, {"title": "В случае убийства набирайте М", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Альфред Хичкок"}, {"title": "Я  исповедуюсь", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Альфред Хичкок"}, {"title": "Незнакомцы в поезде", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Альфред Хичкок"}, {"title": "Страх сцены", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Альфред Хичкок"}, {"title": "Под знаком козерога", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Альфред Хичкок"}, {"title": "Веревка", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Альфред Хичкок"}, {"title": "Дело Парадайна", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Альфред Хичкок"}, {"title": "Дурная слава", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Альфред Хичкок"}, {"title": "Завороженный", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Альфред Хичкок"}, {"title": "человек из Рио", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Альфред Хичкок"}, {"title": "Чужой", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Ридли Скотт"}, {"title": "Гладиатор", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Ридли Скотт"}, {"title": "Черный ястреб", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Ридли Скотт"}, {"title": "Ганнибал", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Ридли Скотт"}, {"title": "Побег из Шоушенка", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Фрэнк Дарабонт"}, {"title": "Зеленая миля", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Фрэнк Дарабонт"}, {"title": "Твин Пикс", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дэвид Линч"}, {"title": "Полночь в Париже", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Вуди Аллен"}, {"title": "Жасмин", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Вуди Аллен"}, {"title": "Дождливый день в Нью – Йорке", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Вуди Аллен"}, {"title": "Вики Кристина Барселона", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Вуди Аллен"}, {"title": "Матч – Поинт", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Вуди Аллен"}, {"title": "Магия лунного света", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Вуди Аллен"}, {"title": "Римские приключения", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Вуди Аллен"}, {"title": "светская жизнь", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Вуди Аллен"}, {"title": "иррациональный человек", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Вуди Аллен"}, {"title": "Колесо чудес", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Вуди Аллен"}, {"title": "Сенсация", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Вуди Аллен"}, {"title": "Под маской жигало", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Вуди Аллен"}, {"title": "Операция ы", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Леонид Гайдай"}, {"title": "иван васильевич меняет проффесию", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Леонид Гайдай"}, {"title": "кавказская пленница", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Леонид Гайдай"}, {"title": "бриллиантовая рука", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Леонид Гайдай"}, {"title": "12 стульев", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Леонид Гайдай"}, {"title": "Лобстер", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Йоргос Лантимос"}, {"title": "Убийство священного оленя", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Йоргос Лантимос"}, {"title": "Клык", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Йоргос Лантимос"}, {"title": "Альпы", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Йоргос Лантимос"}, {"title": "Аттенберг", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Йоргос Лантимос"}, {"title": "Фаворитка", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Йоргос Лантимос"}, {"title": "Кинетта", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Йоргос Лантимос"}, {"title": "12", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Михалков"}, {"title": "утомленные солнцем", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Михалков"}, {"title": "Крестный отец", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Форд Коппола"}, {"title": "изгои", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Форд Коппола"}, {"title": "благодетель", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Форд Коппола"}, {"title": "дракула", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Форд Коппола"}, {"title": "Элитное общество", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Форд Коппола"}, {"title": "Отель гранд будапешт", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Уэс Андерсон"}, {"title": "королевство полной луны", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Уэс Андерсон"}, {"title": "поезд на дарджилинг", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Уэс Андерсон"}, {"title": "Французский вестник", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Уэс Андерсон"}, {"title": "День труда", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Уэс Андерсон"}, {"title": "Семейка тененбаум", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Уэс Андерсон"}, {"title": "Я эрл и умирающая девушка", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Уэс Андерсон"}, {"title": "отель шевалье", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Уэс Андерсон"}, {"title": "Мисс переполох", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Уэс Андерсон"}, {"title": "академия рашмор", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Уэс Андерсон"}, {"title": "всегда в отеле карлайл", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Уэс Андерсон"}, {"title": "Служебный роман", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Эльдар Рязанов"}, {"title": "ирония судьбы", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Эльдар Рязанов"}, {"title": "карнавальная ночь", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Эльдар Рязанов"}, {"title": "жестокий романс", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Эльдар Рязанов"}, {"title": "берегись автомобиля", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Эльдар Рязанов"}, {"title": "гараж", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Эльдар Рязанов"}, {"title": "вокзал для двоих", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Эльдар Рязанов"}, {"title": "Форма воды", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Гильермо де Торо"}, {"title": "Лабирит Фавна", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Гильермо де Торо"}, {"title": "Хребет дьявола", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Гильермо де Торо"}, {"title": "приют", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Гильермо де Торо"}, {"title": "мама", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Гильермо де Торо"}, {"title": "хоббит", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Гильермо де Торо"}, {"title": "не бойся темноты", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Гильермо де Торо"}, {"title": "багровый пик", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Гильермо де Торо"}, {"title": "тихоокеанский рубеж", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Гильермо де Торо"}, {"title": "тонкая желтая линия", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Гильермо де Торо"}, {"title": "хэлбой", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Гильермо де Торо"}, {"title": "бьютифул", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Гильермо де Торо"}, {"title": "химера", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Гильермо де Торо"}, {"title": "пятеро вернулись домой", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Гильермо де Торо"}, {"title": "11 друзей Оушена", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Содерберг"}, {"title": "12 друзей Оушена", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Содерберг"}, {"title": "13 друзей Оушена", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Содерберг"}, {"title": "удача Логана", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Содерберг"}, {"title": "Мозаика", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Содерберг"}, {"title": "Никерборгер", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Содерберг"}, {"title": "Солярис", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Содерберг"}, {"title": "Девушка по вызову", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Содерберг"}, {"title": "Эрин брокович", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Содерберг"}, {"title": "вне поля зрения", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Содерберг"}, {"title": "признание опасного человека", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Содерберг"}, {"title": "8 подруг оушена", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Стивен Содерберг"}, {"title": "Бегущий по лезвию 2049", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дени вильнёв"}, {"title": "прибытие", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дени вильнёв"}, {"title": "убийца", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дени вильнёв"}, {"title": "враг(сложный)", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дени вильнёв"}, {"title": "пленницы", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дени вильнёв"}, {"title": "пожары", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дени вильнёв"}, {"title": "космом", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дени вильнёв"}, {"title": "политех", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дени вильнёв"}, {"title": "Дюна", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дени вильнёв"}, {"title": "Три билборда на границе эббинга миссури", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Мартин макдона"}, {"title": "Банши Инишерина", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Мартин макдона"}, {"title": "залечь на дно в брюге", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Мартин макдона"}, {"title": "однажды в ирландии", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Мартин макдона"}, {"title": "7 психопатов", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Мартин макдона"}, {"title": "Клиент всегда мертв", "category": "series", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Во все тяжкие", "category": "series", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Засланец из космоса", "category": "series", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Тиндер 80х", "category": "series", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Дурнушка (2 сезон 12 серия)", "category": "series", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Звездные войны: Эпизод 1 - Скрытая угроза (1999)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": "Звёздные войны"}, {"title": "Звездные войны: Эпизод 2 - Атака Клонов (2002)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": "Звёздные войны"}, {"title": "Звездные войны: Войны клонов (2008) – анимационный сериал", "category": "series", "status": "watched", "rating": null, "note": "", "tag": "Звёздные войны"}, {"title": "Звездные войны: Эпизод 3 – Месть ситхов (2005)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": "Звёздные войны"}, {"title": "Звездные войны: Бракованная партия (2021) – анимация", "category": "series", "status": "watched", "rating": null, "note": "", "tag": "Звёздные войны"}, {"title": "Хан Соло: Звездные войны. Истории (2018) - фильм", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": "Звёздные войны"}, {"title": "Оби – Ван Кеноби (2022) – сериал", "category": "series", "status": "watched", "rating": null, "note": "", "tag": "Звёздные войны"}, {"title": "Звездные войны: Повстанцы (2014) – анимация", "category": "series", "status": "watched", "rating": null, "note": "", "tag": "Звёздные войны"}, {"title": "Андор (2022)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": "Звёздные войны"}, {"title": "Изгой – один: Звездные войны. История (2016)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": "Звёздные войны"}, {"title": "Звездные войны  : Эпизод 4 – Новая надежда (1977)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": "Звёздные войны"}, {"title": "Звездные войны: Эпизод 5 – Империя наносит ответный удар (1980)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": "Звёздные войны"}, {"title": "Звездные войны: Эпизод 6 – Возвращение джедая (1983)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": "Звёздные войны"}, {"title": "Мандалорец (2019) – сериал", "category": "series", "status": "watched", "rating": null, "note": "", "tag": "Звёздные войны"}, {"title": "Книга Бобы Фетта (2021)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": "Звёздные войны"}, {"title": "Звездные войны: Сопротивление (2018)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": "Звёздные войны"}, {"title": "Звездные войны: Пробуждение силы (2015)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": "Звёздные войны"}, {"title": "Звездные войны: Последние джедаи (2017)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": "Звёздные войны"}, {"title": "Звездные войны: Скайуокер. Восход (2019)", "category": "movie", "status": "watched", "rating": null, "note": "", "tag": "Звёздные войны"}, {"title": "Фотография (список)", "category": "movie", "status": "want", "rating": null, "note": "Тысячу раз спокойной ночи – про женщину военного фотографа Съёмки в палермо – драматический фильм про одиноково фотографа из Германии Фотоувелечение – про скрытом на фото преступлении Фотограф пекер – фотографирует все и везде Великий – Джони Депп играет Юджина Смита 1970 – й в Японии он сталкивается с экологической катастрофой Куриоса – фотография только появляется и тут появляются первые нюдсы, фильм красивый смотрела но ничего не помню, надо пересмотреть. Бешеный пёс и Глория – Роберт де Ниро – полицейский фотограф. Ума Турман его подружка по сюжету. Фото за час – Робин Уильямс сотрудник фотолаборатории, триллер жуткий, психологический. Глаза лауры Марс – популярный Нью – Йорский фотограф, его сюжеты это постановочные убийства. Забывая эту девушку – фотограф влюбен и одержим Военная история - про военного фотографа Воображаемый портрет Дианы Арбус – Роберт Дауни – младший сталкерит за Николь Кидман(триллер,драмма,меллодрама,биография) Потеряный(пропащий человек) – французский фотограф мечтает написать книгу. Верность – про фотожурналистку Лайф – фотограф журнала лайф делает фотоссесию с Джеймсом Дином Уроки Любви Гвиневере – про пожилого фотографа и его историю любви Моя маленькая принцесса – про эстетские фото Юная любовь Змий – о личной драме фотографа Гувернантка Невыносимая легкости бытия Хельмут Ниютон: Высокая фотография – про эротические черно-белые фотографии Безумный мир Дээвида ЛаШапеля", "tag": "Фотография"}, {"title": "Женщина в золотом", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Искусство"}, {"title": "Большие глаза", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Искусство"}, {"title": "Бойс", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Искусство"}, {"title": "Дикарь", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Искусство"}, {"title": "Подлинный Вермеер", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Искусство"}, {"title": "Работа без авторства", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Искусство"}, {"title": "Баския", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Искусство"}, {"title": "Ван. Гог С любовью Винсент", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Искусство"}, {"title": "Поллок", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Искусство"}, {"title": "Марина Абрамович – в присутстви хужожника", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Искусство"}, {"title": "Микеданджело Бесконнечность", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Искусство"}, {"title": "Леонардо да Винчи – неизведанные миры", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Искусство"}, {"title": "Модильяни", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Искусство"}, {"title": "Роден", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Искусство"}, {"title": "Монпарнас", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Искусство"}, {"title": "климт", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Искусство"}, {"title": "Эгон шиле", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Искусство"}, {"title": "ренуар – Последняя любовь", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Искусство"}, {"title": "Грех", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Искусство"}, {"title": "Мистер Тёрнер", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Искусство"}, {"title": "Девушка с жемчужиной сережкой", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Искусство"}, {"title": "Вермеер Тима", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Искусство"}, {"title": "Андрей рублев", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Искусство"}, {"title": "Отчачнные романтики", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Искусство"}, {"title": "Абстракция: искусство дизайна", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Гельветика", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Баухаус: лицо 20 века", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Айрис", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Гении дизайна – сериал", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Современный российский дизайн", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Я соблазнил Энди Уорхела", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Диана Вриланд: Глаз должен путешествовать", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Выход через сувенирную лавку", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Билл Каннингем. Нью – Йорк", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Баския", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Милтон Глейзер: от информации и восторга", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Чистые линии – открытые пронстранства", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Красота – это немного стыдно", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Все на улицу", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Нация хендмейна", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Тайны ночного дозора", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Модель Матисса", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Милашка и боксер", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Королевская линия: История Эла Хиршфельда", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Ай Вейвей: Никогда не извиняйся", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Изображение и текст", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Художник Герхард Рихтер", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Наброски Френка Гэри", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Пол Смит: Джентельмен Дизайнер", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Вог – глазами редактора", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Овеществление", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Мечты Дзиро о суши", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Воплощение", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Это моя земля", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Нация хэндмейда", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Изображение и текст", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Все на улицу", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "100 лет дизайна", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Поему человек творит", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Ай- Вайвей: никогда не извиняйся", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Норма жизни", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Русский авангард", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Трамвай до парка аттракционов", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "Дизайн продуктов питания", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "33 слова о дизайне", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "война искусств(американцы приезжаю в сев корею", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "чтобы показать каким искусство может быть", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}, {"title": "стоит посмотреть впринципе)", "category": "movie", "status": "want", "rating": null, "note": "", "tag": "Дизайн"}];
+const ANIME_SEED = [{"title": "Чёрный клевер", "category": "anime", "status": "watching", "rating": null, "note": "Остановилась на 110 серии", "tag": ""}, {"title": "Обещанный Неверленд", "category": "anime", "status": "watching", "rating": null, "note": "Остановилась на 3 серии", "tag": ""}, {"title": "Реинкарнация безработного", "category": "anime", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Тетрадь смерти", "category": "anime", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Милый во Френксе", "category": "anime", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Паразит", "category": "anime", "status": "watched", "rating": null, "note": "Аниме Kiseijuu, не путать с фильмом Пон Джун Хо", "tag": ""}, {"title": "Re:Zero — Жизнь с нуля в альтернативном мире", "category": "anime", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Хвост феи", "category": "anime", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Клинок, рассекающий демонов", "category": "anime", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Герои шестицветия", "category": "anime", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "№6 (No.6)", "category": "anime", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Парад смерти", "category": "anime", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Врата Штейна", "category": "anime", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Магистр дьявольского культа", "category": "anime", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Шёпот сердца", "category": "anime", "status": "watched", "rating": null, "note": "Полнометражный фильм Studio Ghibli", "tag": ""}, {"title": "Доктор Стоун", "category": "anime", "status": "watching", "rating": null, "note": "Остановилась на 3 серии", "tag": ""}, {"title": "Эхо террора", "category": "anime", "status": "watched", "rating": null, "note": "", "tag": ""}, {"title": "Наруто", "category": "anime", "status": "watching", "rating": null, "note": "2 сезон (Naruto: Shippuden), где-то сотая серия", "tag": ""}];
+// ===== Настройка синхронизации через JSONBin.io =====
+// Чтобы каталог сохранялся на настоящем сайте и синхронизировался между устройствами:
+// 1. Зарегистрируйся бесплатно на https://jsonbin.io
+// 2. В личном кабинете найди API-ключ (X-MASTER-KEY) и вставь его сюда:
+const CONFIG = {
+  jsonbinApiKey: '$2a$10$qslcAyafCDWLfvbIzmAyReD0Gm2zrOu4JPyIripFVbp4qvsjJkqse',   // ключ вставлен
+  jsonbinBinId: ''     // <-- можно оставить пустым: бин создастся сам при первом сохранении.
+                        //     После этого открой консоль браузера (F12), скопируй оттуда
+                        //     ID созданного бина и впиши сюда — тогда все устройства
+                        //     будут точно писать в один и тот же бин.
+};
+// Если jsonbinApiKey пустой — приложение работает как раньше:
+// внутри Claude через его хранилище, а вне Claude — в памяти браузера (localStorage),
+// без синхронизации между устройствами.
+// =======================================================
+
+let catalog = [];
+let flags = {};
+let editingId = null;
+let activeCategory = 'all';
+let activeStatus = 'all';
+let favoriteOnly = false;
+let genreFilterValue = 'all';
+
+function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
+
+async function backendGet(){
+  if(CONFIG.jsonbinApiKey){
+    try{
+      if(!CONFIG.jsonbinBinId){
+        try{ const saved = localStorage.getItem('sinemateka_binid'); if(saved) CONFIG.jsonbinBinId = saved; }catch(e){}
+      }
+      if(!CONFIG.jsonbinBinId) return null;
+      const res = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.jsonbinBinId}/latest`, {
+        headers: {'X-Master-Key': CONFIG.jsonbinApiKey}
+      });
+      if(!res.ok) return null;
+      const data = await res.json();
+      return data.record;
+    }catch(e){ console.error('jsonbin get error', e); return null; }
+  }
+  if(typeof window.storage !== 'undefined'){
+    try{
+      const res = await window.storage.get('app_state', false);
+      return JSON.parse(res.value);
+    }catch(e){ return null; }
+  }
+  try{
+    const raw = localStorage.getItem('sinemateka_state');
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+
+async function backendSet(stateObj){
+  if(CONFIG.jsonbinApiKey){
+    try{
+      if(!CONFIG.jsonbinBinId){
+        const res = await fetch('https://api.jsonbin.io/v3/b', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json','X-Master-Key':CONFIG.jsonbinApiKey,'X-Bin-Name':'sinemateka'},
+          body: JSON.stringify(stateObj)
+        });
+        if(res.ok){
+          const data = await res.json();
+          CONFIG.jsonbinBinId = data.metadata.id;
+          try{ localStorage.setItem('sinemateka_binid', CONFIG.jsonbinBinId); }catch(e){}
+          console.log('Создан новый JSONBin. ID бина (впиши его в CONFIG.jsonbinBinId в коде):', CONFIG.jsonbinBinId);
+        }
+        return;
+      }
+      await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.jsonbinBinId}`, {
+        method: 'PUT',
+        headers: {'Content-Type':'application/json','X-Master-Key':CONFIG.jsonbinApiKey},
+        body: JSON.stringify(stateObj)
+      });
+    }catch(e){ console.error('jsonbin set error', e); }
+    return;
+  }
+  if(typeof window.storage !== 'undefined'){
+    try{ await window.storage.set('app_state', JSON.stringify(stateObj), false); }catch(e){ console.error(e); }
+    return;
+  }
+  try{ localStorage.setItem('sinemateka_state', JSON.stringify(stateObj)); }catch(e){ console.error(e); }
+}
+
+async function persist(){
+  await backendSet({catalog, flags});
+}
+
+async function loadCatalog(){
+  const badge = document.getElementById('syncBadge');
+  if(CONFIG.jsonbinApiKey){
+    badge.textContent = '● синхронизация: JSONBin';
+  }else if(typeof window.storage !== 'undefined'){
+    badge.textContent = '● хранится внутри Claude';
+  }else{
+    badge.textContent = '● хранится локально в этом браузере';
+  }
+  const state = await backendGet();
+  if(state && Array.isArray(state.catalog)){
+    catalog = state.catalog;
+    flags = state.flags || {};
+  }else{
+    catalog = SEED.map(it => ({...it, id: uid()}));
+    flags = {};
+    await persist();
+  }
+  await mergeAnimeSeed();
+  await migrateCatalog();
+  await cleanupPhotoBlob();
+  render();
+  populateGenreFilter();
+}
+
+async function cleanupPhotoBlob(){
+  if(flags.photo_cleanup_v1) return;
+  const before = catalog.length;
+  catalog = catalog.filter(it => !(it.tag==='Фотография' && /^Фотография/.test(it.title)));
+  flags.photo_cleanup_v1 = true;
+  await persist();
+}
+
+async function mergeAnimeSeed(){
+  if(flags.anime_merged_v1) return;
+  catalog = catalog.concat(ANIME_SEED.map(it => ({...it, id: uid()})));
+  flags.anime_merged_v1 = true;
+  await persist();
+}
+
+async function migrateCatalog(){
+  let changed = false;
+  catalog.forEach(it=>{
+    if(it.year===undefined || it.year===null){ it.year=''; changed=true; }
+    if(!it.year){
+      const m = it.title.match(/\s*\((\d{4}(?:[–-]\d{4})?)\)\s*/);
+      if(m){
+        it.year = m[1];
+        it.title = (it.title.slice(0,m.index)+it.title.slice(m.index+m[0].length)).trim();
+        changed = true;
+      }
+    }
+  });
+  if(changed) await persist();
+}
+
+const CAT_LABEL = {movie:'Фильм', series:'Сериал', cartoon:'Мульт', anime:'Аниме'};
+const STATUS_LABEL = {watched:'Просмотрено', watching:'Смотрю', want:'В планах'};
+let sortMode = 'title-asc';
+
+function computeStats(){
+  const watched = catalog.filter(i=>i.status==='watched');
+  const watching = catalog.filter(i=>i.status==='watching');
+  const want = catalog.filter(i=>i.status==='want');
+  const rated = watched.filter(i=>i.rating!==null && i.rating!==undefined && i.rating!=='');
+  const avg = rated.length ? (rated.reduce((a,b)=>a+parseFloat(b.rating),0)/rated.length).toFixed(1) : '—';
+  return {watchedN:watched.length, watchingN:watching.length, wantN:want.length, avg};
+}
+
+function renderStats(){
+  const s = computeStats();
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><b>${s.watchedN}</b><span>Посмотрено</span></div>
+    <div class="stat"><b>${s.watchingN}</b><span>Смотрю сейчас</span></div>
+    <div class="stat"><b>${s.wantN}</b><span>В планах</span></div>
+    <div class="stat"><b>${s.avg}</b><span>Средняя оценка</span></div>
+  `;
+}
+
+function renderFilters(){
+  const cats = [['all','Всё'],['movie','Фильмы'],['series','Сериалы'],['cartoon','Мультфильмы'],['anime','Аниме']];
+  const statuses = [['all','Любой статус'],['watched','Посмотрено'],['watching','Смотрю сейчас'],['want','Хочу посмотреть']];
+  let catHtml = '';
+  cats.forEach(([v,label])=>{
+    catHtml += `<div class="chip ${activeCategory===v?'active':''}" data-kind="cat" data-val="${v}">${label}</div>`;
+  });
+  let statusHtml = '';
+  statuses.forEach(([v,label])=>{
+    const cls = v==='want' ? ' status-want' : (v==='watching' ? ' status-watching' : '');
+    statusHtml += `<div class="chip ${activeStatus===v?'active'+cls:''}" data-kind="status" data-val="${v}">${label}</div>`;
+  });
+  const favHtml = `<div class="chip fav-chip ${favoriteOnly?'active':''}" data-kind="fav" data-val="1">★ Избранное</div>`;
+  document.getElementById('filterCatRow').innerHTML = catHtml;
+  document.getElementById('filterStatusRow').innerHTML = statusHtml;
+  document.getElementById('filterFavRow').innerHTML = favHtml;
+  document.querySelectorAll('#filterCatRow .chip, #filterStatusRow .chip, #filterFavRow .chip').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      if(el.dataset.kind==='cat') activeCategory = el.dataset.val;
+      else if(el.dataset.kind==='status') activeStatus = el.dataset.val;
+      else if(el.dataset.kind==='fav') favoriteOnly = !favoriteOnly;
+      renderFilters();
+      renderList();
+    });
+  });
+}
+
+function renderList(){
+  const q = document.getElementById('search').value.trim().toLowerCase();
+  let items = catalog.filter(it=>{
+    if(activeCategory!=='all' && it.category!==activeCategory) return false;
+    if(activeStatus!=='all' && it.status!==activeStatus) return false;
+    if(favoriteOnly && !it.favorite) return false;
+    if(genreFilterValue!=='all' && !(it.genre||'').split(',').map(g=>g.trim()).includes(genreFilterValue)) return false;
+    if(q){
+      const hay = (it.title+' '+(it.note||'')+' '+(it.tag||'')+' '+(it.year||'')+' '+(it.genre||'')).toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  items = items.slice().sort((a,b)=>{
+    if(sortMode==='title-asc') return a.title.localeCompare(b.title,'ru');
+    if(sortMode==='title-desc') return b.title.localeCompare(a.title,'ru');
+    if(sortMode==='year-desc' || sortMode==='year-asc'){
+      const ya = getYear(a), yb = getYear(b);
+      if(ya!==null && yb===null) return -1;
+      if(ya===null && yb!==null) return 1;
+      if(ya===null && yb===null) return a.title.localeCompare(b.title,'ru');
+      return (sortMode==='year-desc' ? yb-ya : ya-yb) || a.title.localeCompare(b.title,'ru');
+    }
+    const hasA = a.rating!==null && a.rating!==undefined && a.rating!=='';
+    const hasB = b.rating!==null && b.rating!==undefined && b.rating!=='';
+    if(hasA && !hasB) return -1;
+    if(!hasA && hasB) return 1;
+    if(!hasA && !hasB) return a.title.localeCompare(b.title,'ru');
+    const ra = parseFloat(a.rating), rb = parseFloat(b.rating);
+    if(sortMode==='rating-desc') return rb-ra || a.title.localeCompare(b.title,'ru');
+    if(sortMode==='rating-asc') return ra-rb || a.title.localeCompare(b.title,'ru');
+    return 0;
+  });
+  const listEl = document.getElementById('list');
+  if(items.length===0){
+    listEl.innerHTML = `<div class="empty">Ничего не найдено. Измени фильтр или добавь запись.</div>`;
+    renderStats();
+    return;
+  }
+  listEl.innerHTML = items.map(it=>{
+    const ratingHtml = (it.rating!==null && it.rating!==undefined && it.rating!=='') ? `<div class="badge-rating">${it.rating}</div>` : `<div class="badge-rating" style="color:var(--muted-2)">—</div>`;
+    let titleClean = it.title;
+    const noteHtml = it.note ? `<div class="row-note" id="note-${it.id}">${escapeHtml(it.note)}</div>` : '';
+    const noteToggle = it.note ? `<button class="note-toggle" data-note-id="${it.id}" title="Показать описание">▾</button>` : '';
+    const tagHtml = it.tag ? `<div class="row-tag">${escapeHtml(it.tag)}</div>` : '';
+    const posterHtml = it.poster
+      ? `<div class="poster"><img src="${escapeHtml(it.poster)}" alt="" loading="lazy"></div>`
+      : `<div class="poster"><span class="ph">${escapeHtml((it.title[0]||'?').toUpperCase())}</span></div>`;
+    const statusBadge = `<div class="badge-status st-${it.status}">${STATUS_LABEL[it.status]||it.status}</div>`;
+    const favHtml = it.favorite ? `<div class="badge-fav" title="В избранном">★</div>` : '';
+    const yearHtml = it.year ? `<span class="yr">${escapeHtml(it.year)}</span>` : '';
+    const genreHtml = it.genre ? `<div class="badge-genre">${escapeHtml(it.genre)}</div>` : '';
+    return `<div class="row status-${it.status}" data-id="${it.id}">
+      ${posterHtml}
+      <div class="row-main">
+        <div class="row-title">${escapeHtml(titleClean)}${yearHtml}${noteToggle}</div>
+        ${noteHtml}
+        ${tagHtml}
+      </div>
+      <div class="badges">
+        ${favHtml}
+        <div class="badge-cat">${CAT_LABEL[it.category]||it.category}</div>
+        ${genreHtml}
+        ${statusBadge}
+        ${ratingHtml}
+      </div>
+      <div class="row-actions">
+        <button class="icon-btn star-btn ${it.favorite?'active-star':''}" title="В избранное" data-star="${it.id}">${it.favorite?'★':'☆'}</button>
+        <button class="icon-btn edit-btn" title="Редактировать">✎</button>
+      </div>
+    </div>`;
+  }).join('');
+  listEl.querySelectorAll('.star-btn').forEach(el=>{
+    el.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const it = catalog.find(x=>x.id===el.dataset.star);
+      if(it){ it.favorite = !it.favorite; persist(); renderList(); }
+    });
+  });
+  listEl.querySelectorAll('.note-toggle').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const noteEl = document.getElementById('note-'+btn.dataset.noteId);
+      if(!noteEl) return;
+      const expanded = noteEl.classList.toggle('expanded');
+      btn.classList.toggle('open', expanded);
+    });
+  });
+  listEl.querySelectorAll('.row').forEach(el=>{
+    el.addEventListener('click', ()=> openModal(el.dataset.id));
+  });
+  renderStats();
+}
+
+function getYear(it){
+  return it.year ? parseInt(it.year,10) : null;
+}
+
+function escapeHtml(s){
+  return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function render(){
+  renderFilters();
+  renderList();
+}
+
+let currentPoster = '';
+let currentFavorite = false;
+
+function updatePosterPreview(){
+  const field = document.getElementById('posterField');
+  const prev = document.getElementById('posterPreview');
+  if(currentPoster){
+    field.style.display = 'block';
+    prev.innerHTML = `<img src="${currentPoster}" alt="">`;
+  }else{
+    field.style.display = 'none';
+    prev.innerHTML = '';
+  }
+}
+
+function updateFavoriteBtn(){
+  const btn = document.getElementById('f_favorite');
+  btn.textContent = currentFavorite ? '★' : '☆';
+  btn.style.color = currentFavorite ? 'var(--gold)' : 'var(--muted-2)';
+}
+
+function normTitle(t){
+  return (t||'').toLowerCase().replace(/[«»"'.,!?:;]/g,'').replace(/\s+/g,' ').trim();
+}
+
+function findDuplicate(title, year, excludeId){
+  const nt = normTitle(title);
+  if(!nt) return null;
+  return catalog.find(it => it.id!==excludeId && normTitle(it.title)===nt && (it.year||'')===(year||'')) || null;
+}
+
+function hideDupWarning(){
+  const w = document.getElementById('dupWarning');
+  w.style.display = 'none';
+  w.innerHTML = '';
+}
+
+function openModal(id){
+  editingId = id || null;
+  document.getElementById('fetchStatus').textContent = '';
+  hideDupWarning();
+  const it = id ? catalog.find(x=>x.id===id) : null;
+  document.getElementById('modalTitle').textContent = it ? 'Редактировать' : 'Новая запись';
+  document.getElementById('f_title').value = it ? it.title : '';
+  document.getElementById('f_year').value = it ? (it.year||'') : '';
+  document.getElementById('f_category').value = it ? it.category : 'movie';
+  document.getElementById('f_status').value = it ? it.status : 'watched';
+  document.getElementById('f_rating').value = it && it.rating!==null && it.rating!==undefined ? it.rating : '';
+  document.getElementById('f_note').value = it ? (it.note||'') : '';
+  document.getElementById('f_tag').value = it ? (it.tag||'') : '';
+  document.getElementById('f_genre').value = it ? (it.genre||'') : '';
+  document.getElementById('deleteBtn').style.display = it ? 'inline-block' : 'none';
+  currentPoster = it && it.poster ? it.poster : '';
+  currentFavorite = !!(it && it.favorite);
+  updatePosterPreview();
+  updateFavoriteBtn();
+  document.getElementById('overlay').classList.add('show');
+}
+
+function closeModal(){
+  document.getElementById('overlay').classList.remove('show');
+  editingId = null;
+}
+
+async function saveItem(){
+  const title = document.getElementById('f_title').value.trim();
+  if(!title) return;
+  const year = document.getElementById('f_year').value.trim();
+  const category = document.getElementById('f_category').value;
+  const status = document.getElementById('f_status').value;
+  const ratingRaw = document.getElementById('f_rating').value.trim();
+  const rating = ratingRaw ? parseFloat(ratingRaw.replace(',','.')) : null;
+  const note = document.getElementById('f_note').value.trim();
+  const tag = document.getElementById('f_tag').value.trim();
+  const genre = document.getElementById('f_genre').value.trim();
+  const poster = currentPoster || '';
+  const favorite = currentFavorite;
+
+  const dup = findDuplicate(title, year, editingId);
+  if(dup){
+    const w = document.getElementById('dupWarning');
+    w.style.display = 'block';
+    const dupLabel = dup.year ? `${dup.title} (${dup.year})` : dup.title;
+    w.innerHTML = `Уже есть в каталоге: <b>${escapeHtml(dupLabel)}</b> — <button type="button" class="link-btn" id="dupJumpBtn">открыть эту запись</button>`;
+    document.getElementById('dupJumpBtn').addEventListener('click', ()=> openModal(dup.id));
+    return;
+  }
+
+  if(editingId){
+    const it = catalog.find(x=>x.id===editingId);
+    Object.assign(it, {title, year, category, status, rating, note, tag, genre, poster, favorite});
+  }else{
+    catalog.unshift({id: uid(), title, year, category, status, rating, note, tag, genre, poster, favorite});
+  }
+  await persist();
+  closeModal();
+  render();
+  populateGenreFilter();
+}
+
+async function deleteItem(){
+  if(!editingId) return;
+  catalog = catalog.filter(x=>x.id!==editingId);
+  await persist();
+  closeModal();
+  render();
+}
+
+const CAT_TERM = {movie:'фильм', series:'сериал', cartoon:'мультфильм', anime:'аниме'};
+
+async function fetchGenreForPage(pageTitle){
+  try{
+    const propsUrl = `https://ru.wikipedia.org/w/api.php?action=query&prop=pageprops&titles=${encodeURIComponent(pageTitle)}&format=json&origin=*`;
+    const pr = await fetch(propsUrl);
+    if(!pr.ok) return '';
+    const pd = await pr.json();
+    const pages = pd.query && pd.query.pages;
+    const page = pages ? Object.values(pages)[0] : null;
+    const qid = page && page.pageprops && page.pageprops.wikibase_item;
+    if(!qid) return '';
+    const claimUrl = `https://www.wikidata.org/w/api.php?action=wbgetclaims&entity=${qid}&property=P136&format=json&origin=*`;
+    const cr = await fetch(claimUrl);
+    if(!cr.ok) return '';
+    const cd = await cr.json();
+    const claims = cd.claims && cd.claims.P136;
+    if(!claims || !claims.length) return '';
+    const genreIds = claims.slice(0,3).map(c=>c.mainsnak && c.mainsnak.datavalue && c.mainsnak.datavalue.value && c.mainsnak.datavalue.value.id).filter(Boolean);
+    if(!genreIds.length) return '';
+    const labelsUrl = `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${genreIds.join('|')}&props=labels&languages=ru&format=json&origin=*`;
+    const lr = await fetch(labelsUrl);
+    if(!lr.ok) return '';
+    const ld = await lr.json();
+    const names = genreIds.map(id => ld.entities && ld.entities[id] && ld.entities[id].labels && ld.entities[id].labels.ru && ld.entities[id].labels.ru.value).filter(Boolean);
+    return names.join(', ');
+  }catch(e){
+    return '';
+  }
+}
+
+async function fetchWikiInfo(title, year, category){
+  const query = [title, year, CAT_TERM[category]].filter(Boolean).join(' ');
+  const searchUrl = `https://ru.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*&srlimit=1`;
+  const sres = await fetch(searchUrl);
+  if(!sres.ok) throw new Error('search http '+sres.status);
+  const sdata = await sres.json();
+  const hit = sdata && sdata.query && sdata.query.search && sdata.query.search[0];
+  if(!hit) throw new Error('no search hit');
+  const pageTitle = hit.title;
+
+  const sumUrl = `https://ru.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(pageTitle.replace(/ /g,'_'))}`;
+  const pres = await fetch(sumUrl);
+  if(!pres.ok) throw new Error('summary http '+pres.status);
+  const pdata = await pres.json();
+
+  const genre = await fetchGenreForPage(pageTitle);
+  return {pageTitle, pdata, genre};
+}
+
+function buildWikiNote(pageTitle, pdata){
+  const noteLines = [];
+  if(pdata.description) noteLines.push(pdata.description.charAt(0).toUpperCase()+pdata.description.slice(1));
+  if(pdata.extract){
+    const ex = pdata.extract.length > 260 ? pdata.extract.slice(0,260).trim()+'…' : pdata.extract;
+    noteLines.push(ex);
+  }
+  noteLines.push('Источник: Википедия — ' + pageTitle);
+  return noteLines.join('\n');
+}
+
+async function fetchMovieInfo(){
+  const title = document.getElementById('f_title').value.trim();
+  if(!title){
+    document.getElementById('fetchStatus').textContent = 'Сначала введи название.';
+    return;
+  }
+  const btn = document.getElementById('fetchBtn');
+  const statusEl = document.getElementById('fetchStatus');
+  const category = document.getElementById('f_category').value;
+  const yearHint = document.getElementById('f_year').value.trim();
+  btn.disabled = true;
+  statusEl.textContent = 'Ищу статью в Википедии...';
+  try{
+    const {pageTitle, pdata, genre} = await fetchWikiInfo(title, yearHint, category);
+
+    const yearSrc = (pdata.description||'') + ' ' + (pdata.extract||'');
+    const yearMatch = yearSrc.match(/\b(19|20)\d{2}\b/);
+    if(yearMatch && !yearHint) document.getElementById('f_year').value = yearMatch[0];
+
+    if(pdata.thumbnail && pdata.thumbnail.source){
+      currentPoster = pdata.thumbnail.source;
+    }
+    updatePosterPreview();
+
+    if(genre && !document.getElementById('f_genre').value.trim()){
+      document.getElementById('f_genre').value = genre;
+    }
+
+    const noteLine = buildWikiNote(pageTitle, pdata);
+    const curNote = document.getElementById('f_note').value.trim();
+    document.getElementById('f_note').value = curNote ? (curNote+'\n\n'+noteLine) : noteLine;
+
+    statusEl.textContent = currentPoster ? 'Готово — обложка, жанр и описание подставлены.' : 'Нашла статью, но без обложки. Остальное добавлено.';
+  }catch(e){
+    console.error('fetchMovieInfo error:', e);
+    statusEl.textContent = 'Не нашла статью в Википедии для "'+title+'". Попробуй уточнить название/год или заполни вручную.';
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+let bulkRunning = false;
+
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+async function bulkEnrich(){
+  const btn = document.getElementById('bulkEnrichBtn');
+  const statusEl = document.getElementById('bulkStatus');
+  if(bulkRunning){
+    bulkRunning = false;
+    btn.textContent = '⌕ Подгрузить обложки, жанры и описания из Википедии для всех записей';
+    statusEl.textContent = 'Остановлено. Можно продолжить позже — уже обработанные записи не тронутся.';
+    return;
+  }
+  const targets = catalog.filter(it => !it.poster);
+  if(targets.length===0){
+    statusEl.textContent = 'У всех записей уже есть обложка.';
+    return;
+  }
+  bulkRunning = true;
+  btn.textContent = '■ Остановить подгрузку';
+  let done = 0, found = 0;
+  for(const it of targets){
+    if(!bulkRunning) break;
+    done++;
+    statusEl.textContent = `Обрабатываю ${done} из ${targets.length}: ${it.title}${it.year?' ('+it.year+')':''}`;
+    try{
+      const {pageTitle, pdata, genre} = await fetchWikiInfo(it.title, it.year, it.category);
+      if(pdata.thumbnail && pdata.thumbnail.source) it.poster = pdata.thumbnail.source;
+      if(genre && !it.genre) it.genre = genre;
+      if(!it.note || !it.note.includes('Источник: Википедия')){
+        const noteLine = buildWikiNote(pageTitle, pdata);
+        it.note = it.note ? (it.note+'\n\n'+noteLine) : noteLine;
+      }
+      found++;
+    }catch(e){
+      // не нашлось — пропускаем, идём дальше
+    }
+    if(done % 15 === 0){ await persist(); renderList(); populateGenreFilter(); }
+    await sleep(250);
+  }
+  await persist();
+  renderList();
+  populateGenreFilter();
+  bulkRunning = false;
+  btn.textContent = '⌕ Подгрузить обложки, жанры и описания из Википедии для всех записей';
+  statusEl.textContent = `Готово: обработано ${done} из ${targets.length}, найдено ${found}. Если что-то не нашлось — можно запустить ещё раз, оно попробует только оставшиеся.`;
+}
+
+function populateGenreFilter(){
+  const sel = document.getElementById('genreFilter');
+  const cur = sel.value || 'all';
+  const genres = new Set();
+  catalog.forEach(it=>{
+    if(it.genre){
+      it.genre.split(',').map(g=>g.trim()).filter(Boolean).forEach(g=>genres.add(g));
+    }
+  });
+  const sorted = Array.from(genres).sort((a,b)=>a.localeCompare(b,'ru'));
+  sel.innerHTML = '<option value="all">Все жанры</option>' + sorted.map(g=>`<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('');
+  if(sorted.includes(cur) || cur==='all') sel.value = cur;
+}
+
+document.getElementById('addBtn').addEventListener('click', ()=>openModal(null));
+document.getElementById('cancelBtn').addEventListener('click', closeModal);
+document.getElementById('saveBtn').addEventListener('click', saveItem);
+document.getElementById('deleteBtn').addEventListener('click', deleteItem);
+document.getElementById('fetchBtn').addEventListener('click', fetchMovieInfo);
+document.getElementById('overlay').addEventListener('click', (e)=>{ if(e.target.id==='overlay') closeModal(); });
+document.getElementById('search').addEventListener('input', renderList);
+document.getElementById('sortSelect').addEventListener('change', (e)=>{ sortMode = e.target.value; renderList(); });
+document.getElementById('f_favorite').addEventListener('click', ()=>{ currentFavorite = !currentFavorite; updateFavoriteBtn(); });
+document.getElementById('f_title').addEventListener('input', hideDupWarning);
+document.getElementById('f_year').addEventListener('input', hideDupWarning);
+document.getElementById('bulkEnrichBtn').addEventListener('click', bulkEnrich);
+document.getElementById('genreFilter').addEventListener('change', (e)=>{ genreFilterValue = e.target.value; renderList(); });
+
+loadCatalog();
+</script>
+</body>
+</html>
